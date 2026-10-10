@@ -41,21 +41,21 @@ class RunScriptTest(unittest.TestCase):
 
     def test_input_and_output_are_shown(self):
         """Each command is echoed with the prompt followed by output."""
-        status = run_script(self.shell, ["ls a"], self.ui)
+        status = run_script(self.shell, ["echo a"], self.ui)
         self.assertEqual(status, STATUS_OK)
-        self.assertEqual(self.texts(), ["default:/$ ls a", "ls: args=['a']"])
+        self.assertEqual(self.texts(), ["default:/$ echo a", "a"])
 
     def test_comments_and_blank_lines_skipped(self):
         """Comments and blank lines produce no output."""
-        run_script(self.shell, ["# note", "", "  ", "cd x"], self.ui)
+        run_script(self.shell, ["# note", "", "  ", "echo x"], self.ui)
         self.assertEqual(len(self.ui.lines), 2)
 
     def test_stops_at_first_error(self):
         """Lines after the failed command are not executed."""
-        lines = ["ls", "bad", "cd x"]
+        lines = ["ls", "bad", "echo x"]
         self.assertEqual(run_script(self.shell, lines, self.ui),
                          STATUS_ERROR)
-        self.assertNotIn("default:/$ cd x", self.texts())
+        self.assertNotIn("default:/$ echo x", self.texts())
         self.assertIn("script stopped: error in line 2", self.texts())
 
     def test_exit(self):

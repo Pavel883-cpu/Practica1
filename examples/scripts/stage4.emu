@@ -1,0 +1,24 @@
+# Stage 4: ls, cd, clear, echo, who on the "deep" VFS.
+# --- ls: plain, long format, path argument, file argument
+ls
+ls -l
+ls projects
+ls -l /projects/app/src
+ls /home/user/note.txt
+# --- cd: relative, absolute, "..", "." and plain cd (goes to the root)
+cd projects/app/src
+ls
+cd ..
+ls docs
+cd /home/user
+ls -l .
+cd ../..
+cd
+# --- echo with environment variables
+echo hello    world
+echo home is $HOME
+echo
+# --- who and clear
+who
+clear
+ls

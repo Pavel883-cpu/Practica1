@@ -3,7 +3,7 @@
 conf-dump
 ls
 cd /projects/app
-ls $HOME
+ls /home
 # unknown command is an error and stops the script
 nosuchcommand
 ls

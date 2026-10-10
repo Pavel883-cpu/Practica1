@@ -104,6 +104,13 @@ class VFS:
         """Return the node for a path or raise VFSError."""
         return self.node_at(self.normalize(path))
 
+    def chdir(self, path):
+        """Make a directory the current one or raise VFSError."""
+        parts = self.normalize(path)
+        if not isinstance(self.node_at(parts), Directory):
+            raise VFSError("not a directory")
+        self.cwd = parts
+
     def cwd_path(self):
         """Return the current directory as an absolute path string."""
         return "/" + "/".join(self.cwd)
