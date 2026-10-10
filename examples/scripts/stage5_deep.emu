@@ -1,0 +1,14 @@
+# Stage 5 on the "deep" VFS: directories, rm -r and mv into folders.
+# Run it with: --vfs examples/vfs/deep
+ls /projects
+mv /projects/lib /home/user
+ls /home/user
+ls /projects
+mv /home/user/note.txt /home/user/lib/notes-moved.txt
+ls /home/user/lib
+cd /projects/app
+rm -r docs
+ls
+cd /
+rm -r projects
+ls

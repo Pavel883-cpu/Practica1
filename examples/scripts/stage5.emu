@@ -1,0 +1,16 @@
+# Stage 5: rm and mv. All changes are made only in memory.
+# Run it with: --vfs examples/vfs/multi
+ls
+# --- mv: rename, move into a directory, move a directory
+mv words.txt vocabulary.txt
+ls
+cd /
+echo $HOME is not in the VFS but the variable is expanded
+mv notes.txt readme.md
+ls
+# --- rm: single file, several files
+rm vocabulary.txt
+ls
+rm readme.md motd
+ls
+# the disk is untouched: load the same VFS again to see the files back

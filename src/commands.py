@@ -1,4 +1,4 @@
-"""Implementation of shell commands (stage 4: basic commands)."""
+"""Implementation of shell commands."""
 
 import getpass
 import stat
@@ -9,6 +9,8 @@ from vfs import Directory, VFSError
 SESSION_TERMINAL = "console"
 START_FORMAT = "%Y-%m-%d %H:%M"
 LONG_FLAG = "-l"
+RECURSIVE_FLAGS = ("-r", "-R")
+MV_ARGUMENTS = 2
 
 
 def cmd_exit(_shell, args):
@@ -116,6 +118,34 @@ def cmd_cd(shell, args):
     return Result()
 
 
+def cmd_rm(shell, args):
+    """Remove files from the VFS in memory: rm [-r] path..."""
+    recursive = any(arg in RECURSIVE_FLAGS for arg in args)
+    paths = [arg for arg in args if arg not in RECURSIVE_FLAGS]
+    if not paths:
+        return fail("rm: missing operand")
+    errors = []
+    for path in paths:
+        try:
+            shell.vfs.remove(path, recursive)
+        except VFSError as error:
+            errors.append(f"rm: cannot remove '{path}': {error}")
+    return Result("\n".join(errors), error=bool(errors))
+
+
+def cmd_mv(shell, args):
+    """Move or rename an entry of the VFS in memory: mv source dest."""
+    if len(args) < MV_ARGUMENTS:
+        return fail("mv: missing operand")
+    if len(args) > MV_ARGUMENTS:
+        return fail("mv: too many arguments")
+    try:
+        shell.vfs.move(args[0], args[1])
+    except VFSError as error:
+        return fail(f"mv: cannot move '{args[0]}' to '{args[1]}': {error}")
+    return Result()
+
+
 COMMANDS = {
     "ls": cmd_ls,
     "cd": cmd_cd,
@@ -124,4 +154,6 @@ COMMANDS = {
     "clear": cmd_clear,
     "echo": cmd_echo,
     "who": cmd_who,
+    "rm": cmd_rm,
+    "mv": cmd_mv,
 }

@@ -111,6 +111,69 @@ class VFS:
             raise VFSError("not a directory")
         self.cwd = parts
 
+    def parent_and_name(self, parts):
+        """Return the parent directory and the last name of a path."""
+        if not parts:
+            raise VFSError("operation not permitted on the root directory")
+        parent = self.node_at(parts[:-1])
+        if not isinstance(parent, Directory):
+            raise VFSError("not a directory")
+        return parent, parts[-1]
+
+    def lookup_entry(self, parts):
+        """Return (parent, name, node) for an existing path."""
+        parent, name = self.parent_and_name(parts)
+        node = parent.children.get(name)
+        if node is None:
+            raise VFSError("no such file or directory")
+        return parent, name, node
+
+    def contains_cwd(self, parts):
+        """Return True if the current directory is at or below the path."""
+        return self.cwd[:len(parts)] == parts
+
+    def remove(self, path, recursive=False):
+        """Remove a file, or a directory when recursive is True."""
+        parts = self.normalize(path)
+        parent, name, node = self.lookup_entry(parts)
+        if isinstance(node, Directory) and not recursive:
+            raise VFSError("is a directory")
+        if self.contains_cwd(parts):
+            raise VFSError("is the current directory or contains it")
+        del parent.children[name]
+
+    def resolve_target(self, source_name, dest_parts):
+        """Find where a moved entry goes: (parent, new name, full path).
+
+        An existing directory as destination receives the entry inside.
+        """
+        try:
+            existing = self.node_at(dest_parts)
+        except VFSError:
+            existing = None
+        if isinstance(existing, Directory):
+            return existing, source_name, dest_parts + [source_name]
+        parent, name = self.parent_and_name(dest_parts)
+        return parent, name, dest_parts
+
+    def move(self, source, destination):
+        """Move or rename a file or a directory inside the VFS."""
+        src_parts = self.normalize(source)
+        src_parent, src_name, node = self.lookup_entry(src_parts)
+        if self.contains_cwd(src_parts):
+            raise VFSError("is the current directory or contains it")
+        parent, name, full = self.resolve_target(
+            src_name, self.normalize(destination))
+        if full == src_parts:
+            return
+        if full[:len(src_parts)] == src_parts:
+            raise VFSError("cannot move a directory into itself")
+        existing = parent.children.get(name)
+        if existing is not None and Directory in (type(existing), type(node)):
+            raise VFSError(f"cannot overwrite '{name}'")
+        del src_parent.children[src_name]
+        parent.children[name] = node
+
     def cwd_path(self):
         """Return the current directory as an absolute path string."""
         return "/" + "/".join(self.cwd)

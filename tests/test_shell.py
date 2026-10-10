@@ -137,5 +137,98 @@ class SimpleCommandsTest(unittest.TestCase):
         self.assertTrue(self.shell.execute("who x").error)
 
 
+def make_tree_shell():
+    """Create a shell on a VFS with nested folders for rm and mv."""
+    root = Directory({
+        "a.txt": File(b"A"),
+        "b.txt": File(b"B"),
+        "dir": Directory({"in.txt": File(b"I"),
+                          "sub": Directory({"deep.txt": File(b"D")})}),
+        "empty": Directory(),
+    })
+    return Shell(VFS("t", root))
+
+
+class RmTest(unittest.TestCase):
+    """The rm command works only in memory."""
+
+    def setUp(self):
+        """Create a shell with a nested tree."""
+        self.shell = make_tree_shell()
+
+    def test_remove_file(self):
+        """A file disappears from ls."""
+        self.assertFalse(self.shell.execute("rm a.txt").error)
+        self.assertNotIn("a.txt", self.shell.execute("ls").output)
+
+    def test_remove_several(self):
+        """Several files can be removed by one command."""
+        self.shell.execute("rm a.txt b.txt")
+        self.assertEqual(self.shell.execute("ls").output, "dir/  empty/")
+
+    def test_directory_needs_recursive_flag(self):
+        """A directory is removed only with -r."""
+        self.assertTrue(self.shell.execute("rm dir").error)
+        self.assertFalse(self.shell.execute("rm -r dir").error)
+        self.assertTrue(self.shell.execute("ls dir").error)
+
+    def test_errors(self):
+        """Missing operand, missing file and the root are errors."""
+        for line in ("rm", "rm nope", "rm -r /", "rm -r"):
+            self.assertTrue(self.shell.execute(line).error, line)
+
+    def test_cannot_remove_current_directory(self):
+        """The current directory and its parents are protected."""
+        self.shell.execute("cd dir/sub")
+        self.assertTrue(self.shell.execute("rm -r /dir").error)
+        self.assertTrue(self.shell.execute("rm -r .").error)
+
+
+class MvTest(unittest.TestCase):
+    """The mv command works only in memory."""
+
+    def setUp(self):
+        """Create a shell with a nested tree."""
+        self.shell = make_tree_shell()
+
+    def test_rename(self):
+        """Renaming keeps the content."""
+        self.assertFalse(self.shell.execute("mv a.txt c.txt").error)
+        self.assertEqual(self.shell.vfs.get("/c.txt").data, b"A")
+        self.assertTrue(self.shell.execute("ls a.txt").error)
+
+    def test_move_into_directory(self):
+        """An existing directory receives the entry under its name."""
+        self.shell.execute("mv a.txt dir")
+        self.assertEqual(self.shell.vfs.get("/dir/a.txt").data, b"A")
+
+    def test_move_directory(self):
+        """A whole directory can be moved."""
+        self.shell.execute("mv dir/sub empty")
+        self.assertEqual(self.shell.vfs.get("/empty/sub/deep.txt").data, b"D")
+
+    def test_overwrite_file(self):
+        """A file may replace another file."""
+        self.shell.execute("mv a.txt b.txt")
+        self.assertEqual(self.shell.vfs.get("/b.txt").data, b"A")
+
+    def test_errors(self):
+        """Typical wrong usage is reported."""
+        bad = ("mv", "mv a.txt", "mv a b c", "mv nope x", "mv dir dir/sub",
+               "mv a.txt nope/x", "mv dir a.txt", "mv /")
+        for line in bad:
+            self.assertTrue(self.shell.execute(line).error, line)
+
+    def test_same_place_is_noop(self):
+        """Moving an entry onto itself changes nothing."""
+        self.assertFalse(self.shell.execute("mv a.txt a.txt").error)
+        self.assertEqual(self.shell.vfs.get("/a.txt").data, b"A")
+
+    def test_cannot_move_current_directory(self):
+        """The current directory is protected."""
+        self.shell.execute("cd dir")
+        self.assertTrue(self.shell.execute("mv /dir /empty").error)
+
+
 if __name__ == "__main__":
     unittest.main()
