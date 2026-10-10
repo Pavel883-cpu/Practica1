@@ -1,0 +1,4 @@
+# The script stops at the first error: line 4 must never run.
+ls
+unknown-command arg
+conf-dump

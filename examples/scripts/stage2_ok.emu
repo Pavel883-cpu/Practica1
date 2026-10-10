@@ -1,0 +1,7 @@
+# Stage 2: startup script with comments. Everything is shown like a dialog.
+ls
+cd $HOME
+conf-dump
+# the next line is a comment, blank lines are skipped too
+
+ls -l /tmp

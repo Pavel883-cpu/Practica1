@@ -3,6 +3,9 @@
 import tkinter as tk
 from tkinter import scrolledtext
 
+from script import STATUS_EXIT
+from startup import startup
+
 FONT = ("Courier", 11)
 BACKGROUND = "#1e1e1e"
 FOREGROUND = "#d4d4d4"
@@ -28,6 +31,13 @@ class EmulatorApp:
         root.title(window_title(shell.vfs_name))
         self._build_widgets()
         self.entry.focus_set()
+
+    def start(self, config, problems=()):
+        """Run the startup sequence; close the window if it asks for exit."""
+        status = startup(self, self.shell, config, problems)
+        self.refresh_prompt()
+        if status == STATUS_EXIT:
+            self.root.destroy()
 
     def _build_widgets(self):
         """Create the output area, prompt label and input entry."""

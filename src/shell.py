@@ -1,4 +1,4 @@
-"""Command interpreter of the emulator (stage 1: prototype with stubs)."""
+"""Command interpreter of the emulator (stage 2: configuration)."""
 
 from dataclasses import dataclass
 
@@ -18,13 +18,15 @@ class Result:
 class Shell:
     """Interpreter that dispatches commands to handlers."""
 
-    def __init__(self, vfs_name="default"):
+    def __init__(self, vfs_name="default", config=None):
         """Create a shell for the VFS with the given name."""
         self.vfs_name = vfs_name
+        self.config = config
         self.commands = {
             "ls": self.cmd_ls,
             "cd": self.cmd_cd,
             "exit": self.cmd_exit,
+            "conf-dump": self.cmd_conf_dump,
         }
 
     def prompt(self):
@@ -54,3 +56,13 @@ class Shell:
         if args:
             return Result("exit: too many arguments", error=True)
         return Result(exit=True)
+
+    def cmd_conf_dump(self, args):
+        """Print emulator parameters as key=value lines."""
+        if args:
+            return Result("conf-dump: too many arguments", error=True)
+        if self.config is None:
+            return Result()
+        lines = [f"{key}={value}"
+                 for key, value in self.config.as_dict().items()]
+        return Result("\n".join(lines))
