@@ -17,6 +17,9 @@ def startup(ui, shell, config, problems=()):
     for problem in problems:
         ui.emit(problem, True)
         status = STATUS_ERROR
+    motd = shell.vfs.motd()
+    if motd:
+        ui.emit(motd)
     if not config.script:
         return status
     try:

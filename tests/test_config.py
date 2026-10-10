@@ -14,11 +14,6 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual((config.vfs, config.script), ("a/b", "s.emu"))
         self.assertFalse(config.headless)
 
-    def test_vfs_name(self):
-        """The VFS name is the last path component."""
-        self.assertEqual(Config(vfs="a/b/").vfs_name(), "b")
-        self.assertEqual(Config().vfs_name(), "default")
-
     def test_debug_lists_every_parameter(self):
         """Debug output has one line for each parameter."""
         lines = format_debug(Config(vfs="x"))

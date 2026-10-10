@@ -1,0 +1,9 @@
+# Stage 3: everything implemented so far, including VFS-related behaviour.
+# The prompt shows the name of the loaded VFS.
+conf-dump
+ls
+cd /projects/app
+ls $HOME
+# unknown command is an error and stops the script
+nosuchcommand
+ls

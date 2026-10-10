@@ -5,6 +5,7 @@ import sys
 from config import parse_args
 from console import run_headless
 from shell import Shell
+from vfs import VFS, VFSError
 
 START_DELAY_MS = 50
 
@@ -22,11 +23,25 @@ def run_gui(shell, config, problems):
     return 0
 
 
+def load_vfs(config):
+    """Load the VFS named in the config.
+
+    Returns (vfs, problems). On a load error the default in-memory VFS
+    is used and the error message is returned in problems.
+    """
+    if not config.vfs:
+        return VFS.default(), []
+    try:
+        return VFS.from_directory(config.vfs), []
+    except VFSError as error:
+        return VFS.default(), [f"VFS load error: {error}"]
+
+
 def main(argv=None):
     """Parse parameters, create the shell and run the chosen mode."""
     config = parse_args(argv)
-    shell = Shell(config.vfs_name(), config)
-    problems = []
+    vfs, problems = load_vfs(config)
+    shell = Shell(vfs, config)
     if config.headless:
         return run_headless(shell, config, problems)
     return run_gui(shell, config, problems)

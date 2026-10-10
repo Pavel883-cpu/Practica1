@@ -1,11 +1,9 @@
 """Command line configuration of the emulator."""
 
 import argparse
-import os
 from dataclasses import dataclass
 from typing import Optional
 
-DEFAULT_VFS_NAME = "default"
 NOT_SET = "(not set)"
 
 
@@ -16,13 +14,6 @@ class Config:
     vfs: Optional[str] = None
     script: Optional[str] = None
     headless: bool = False
-
-    def vfs_name(self):
-        """Return the VFS name: the last component of the VFS path."""
-        if not self.vfs:
-            return DEFAULT_VFS_NAME
-        name = os.path.basename(os.path.normpath(self.vfs))
-        return name or DEFAULT_VFS_NAME
 
     def as_dict(self):
         """Return all parameters as an ordered key-value mapping."""
