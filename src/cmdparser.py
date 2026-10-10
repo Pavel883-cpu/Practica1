@@ -14,6 +14,7 @@ def expand_env(text, env=None):
     source = os.environ if env is None else env
 
     def replace(match):
+        """Return the value of the variable found by the match."""
         name = match.group(1) or match.group(2)
         return source.get(name, "")
 
