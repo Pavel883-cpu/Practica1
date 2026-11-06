@@ -1,0 +1,40 @@
+# Практическая работа №2 — вариант 30
+CLI-инструмент для построения графа зависимостей npm-пакетов. Используется встроенный Node.js fetch и npm Registry API; npm/yarn/pnpm и сторонние библиотеки для получения зависимостей не вызываются.
+
+## Требования
+Node.js 18+. Для PNG дополнительно установите Graphviz и добавьте команду dot в PATH. Сторонние npm-зависимости отсутствуют.
+
+## Параметры CLI
+--package <имя> — пакет (обязательно); --repository <URL|JSON> — npm Registry или JSON-репозиторий; --test-mode — локальный тестовый режим; --version <версия> — точная версия корневого пакета; --output <файл.dot> — DOT-файл; --max-depth <N> — глубина BFS; --reverse — обратные зависимости в полном тестовом графе; --help — справка. Программа печатает параметры как key=value и проверяет ошибки.
+
+## Этапы
+1. CLI, параметры, конфигурация и диагностика ошибок.
+2. Загрузка метаданных заданной версии из npm Registry; прямые зависимости берутся из dependencies и optionalDependencies.
+3. Итеративный BFS с ограничением глубины, обнаружением циклов и дедупликацией общих узлов. Тестовый JSON использует имена из заглавных латинских букв.
+4. Обратный BFS по входящим рёбрам полного тестового графа.
+5. Генерация Graphviz DOT и PNG (при установленном Graphviz), демонстрация нескольких корневых пакетов и сравнение с npm ls.
+
+## Запуск
+```bash
+npm test
+npm start -- --package express --version 4.18.2 --max-depth 2 --output express.dot
+npm start -- --package A --test-mode --repository test-repos/sample.json --output a.dot
+npm start -- --package B --test-mode --repository test-repos/sample.json --output b.dot
+npm start -- --package C --test-mode --repository test-repos/sample.json --output c.dot
+npm start -- --package D --test-mode --repository test-repos/sample.json --reverse --output reverse-d.dot
+```
+
+## Тестовый граф
+```json
+{"A":["B","C"],"B":["D"],"C":["D","E"],"D":["A"],"E":[]}
+```
+Граф содержит цикл D→A и общие зависимости D. Обратный поиск от D найдёт B и C как прямых зависимых, а A/E — транзитивные (с учётом направлений рёбер).
+
+## DOT и PNG
+Файл .dot сохраняется всегда. PNG создаётся командой `dot -Tpng input.dot -o output.png`. Без Graphviz приложение сообщает, что PNG не создан, но DOT остаётся доступен.
+
+## Сравнение с npm ls
+`npm ls <package> --all` показывает фактически установленное дерево из node_modules и учитывает lock-файл, peer-зависимости и состояние установки. Эта программа запрашивает метаданные Registry; для транзитивных пакетов берёт dist-tag latest, поэтому дерево может отличаться от npm ls. DOT явно показывает рёбра, циклы и общие зависимости; npm ls визуализирует установленное дерево и может повторять/сворачивать узлы. Для live-режима полный обратный индекс dependents не предоставляется Registry API, поэтому --reverse доступен только при наличии полного JSON-графа.
+
+## Ограничения
+Для точного разрешения транзитивных диапазонов semver и совпадения с npm install необходим lock-файл или полноценный resolver. Сетевые запросы зависят от доступности npm Registry.
