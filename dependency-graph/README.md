@@ -38,3 +38,7 @@ npm start -- --package D --test-mode --repository test-repos/sample.json --rever
 
 ## Ограничения
 Для точного разрешения транзитивных диапазонов semver и совпадения с npm install необходим lock-файл или полноценный resolver. Сетевые запросы зависят от доступности npm Registry.
+
+
+## Фиксация этапа 2
+Реализовано получение метаданных выбранной версии пакета через npm Registry API и извлечение прямых зависимостей из `dependencies` и `optionalDependencies`. Проверки HTTP-ошибок и кодирования scoped-пакетов покрыты тестами.
