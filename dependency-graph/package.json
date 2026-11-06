@@ -1,0 +1,9 @@
+{
+  "name": "npm-dependency-graph-variant-30",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CLI tool for npm dependency graph analysis, variant 30",
+  "main": "src/index.js",
+  "scripts": { "start": "node src/index.js", "test": "node --test" },
+  "engines": { "node": ">=18" }
+}
